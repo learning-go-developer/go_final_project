@@ -17,7 +17,7 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	task, err := db.GetTask(id)
-	if err != nil || task == nil || task.ID == "" || task.ID == "0" {
+	if err != nil {
 		sendJSON(w, http.StatusNotFound, map[string]string{"error": "Задача не найдена"})
 		return
 	}
@@ -101,7 +101,7 @@ func finishTaskHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		nextDate, err := NextDate(time.Now(), task.Date, task.Repeat)
+		nextDate, err := NextDate(time.Now().UTC(), task.Date, task.Repeat)
 		if err != nil {
 			sendJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
