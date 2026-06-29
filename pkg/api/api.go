@@ -3,9 +3,11 @@ package api
 import "net/http"
 
 func RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/api/signin", signInHandler)
+
 	mux.HandleFunc("/api/nextdate", nextDateHandler)
 
-	mux.HandleFunc("/api/task", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/task", AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			addTaskHandler(w, r)
@@ -18,21 +20,21 @@ func RegisterRoutes(mux *http.ServeMux) {
 		default:
 			sendJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Метод не поддерживается"})
 		}
-	})
+	}))
 
-	mux.HandleFunc("/api/tasks", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/tasks", AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			sendJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Метод не поддерживается"})
 			return
 		}
 		getTasksHandler(w, r)
-	})
+	}))
 
-	mux.HandleFunc("/api/task/done", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/task/done", AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			sendJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "Метод не поддерживается"})
 			return
 		}
 		finishTaskHandler(w, r)
-	})
+	}))
 }

@@ -1,20 +1,66 @@
-# Файлы для итогового задания
+# Todo Scheduler
 
-В директории `tests` находятся тесты для проверки API, которое должно быть реализовано в веб-сервере.
+Веб-сервер для планирования задач с поддержкой аутентификации и работы с SQLite базой данных.
 
-Директория `web` содержит файлы фронтенда.
+## Реализованные задания со звездочкой:
+- **Аутентификация:** Реализована через JWT-токены с привязкой к паролю в переменных окружения.
+- **Docker:** Создан оптимизированный multi-stage образ на базе `scratch` (итоговый размер образа ~20 МБ).
 
-## Environment variable
+## Требования
+- Go 1.25.6+
+- SQLite (встроена через библиотеку `modernc.org/sqlite`)
 
-By default, the server listens on port **7540**.
+## Локальный запуск
+1. Установите переменные окружения:
+   - `TODO_PORT`: порт (по умолчанию 7540)
+   - `TODO_DBFILE`: имя файла БД
+   - `TODO_PASSWORD`: пароль для доступа
+2. Запустите проект:
+```bash
+   go run main.go
 
-To use a different port, set the `TODO_PORT` environment variable before starting the server.
+```
+
+3. Откройте приложение в браузере: `http://localhost:7540`.
+
+## Запуск через Docker
+
+1. **Сборка образа:**
+```bash
+docker build -t todo-scheduler:latest .
+
+```
+
+
+2. **Запуск контейнера:**
+```bash
+docker run -d \
+  -p 7540:7540 \
+  -e TODO_PASSWORD="password" \
+  -v $(pwd)/scheduler.db:/app/scheduler.db \
+  --name todo_app \
+  todo-scheduler:latest
+
+```
+
+
+*Примечание: флаг `-v` монтирует базу данных с хоста в контейнер для сохранения данных.*
+
+## Тестирование
+
+Для запуска всех тестов используйте:
 
 ```bash
-# Export the variable
-export TODO_PORT=7540
-go run .
+go test ./tests/... -v
 
-# Or set it only for the current command
-TODO_PORT=7540 go run .
 ```
+
+**Важно:** Для тестов, требующих авторизации, необходимо обновить переменную `Token` в файле `tests/settings.go`. Чтобы получить актуальный токен, выполните в терминале:
+
+```bash
+curl -X POST http://localhost:7540/api/signin \
+  -H "Content-Type: application/json" \
+  -d '{"password": "твой_пароль"}'
+```
+
+Полученный JSON-ответ (поле token) необходимо скопировать и вставить в переменную Token в файле tests/settings.go.
