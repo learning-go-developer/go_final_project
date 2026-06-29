@@ -63,32 +63,29 @@ func AddTask(t *Task) (int64, error) {
 }
 
 func GetTask(id string) (*Task, error) {
-	var t Task
-	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`
-	err := DB.QueryRow(query, id).Scan(&t.ID, &t.Date, &t.Title, &t.Comment, &t.Repeat)
-	if err != nil {
-		return nil, err
-	}
-	if t.ID == "" {
-		return nil, sql.ErrNoRows
-	}
-	return &t, nil
+    var t Task
+    query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`
+    err := DB.QueryRow(query, id).Scan(&t.ID, &t.Date, &t.Title, &t.Comment, &t.Repeat)
+    if err != nil {
+        return nil, err
+    }
+    return &t, nil
 }
 
 func UpdateTask(t *Task) error {
-	query := `UPDATE scheduler SET date = ?, title = ?, comment = ?, repeat = ? WHERE id = ?`
-	res, err := DB.Exec(query, t.Date, t.Title, t.Comment, t.Repeat, t.ID)
-	if err != nil {
-		return err
-	}
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rows == 0 {
-		return context.DeadlineExceeded
-	}
-	return nil
+    query := `UPDATE scheduler SET date = ?, title = ?, comment = ?, repeat = ? WHERE id = ?`
+    res, err := DB.Exec(query, t.Date, t.Title, t.Comment, t.Repeat, t.ID)
+    if err != nil {
+        return err
+    }
+    rows, err := res.RowsAffected()
+    if err != nil {
+        return err
+    }
+    if rows == 0 {
+        return sql.ErrNoRows
+    }
+    return nil
 }
 
 func DeleteTask(id string) error {
