@@ -17,7 +17,7 @@ func nextDateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		now = time.Now()
+		now = time.Now().UTC()
 	}
 
 	res, err := NextDate(now, r.FormValue("date"), r.FormValue("repeat"))
