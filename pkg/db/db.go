@@ -3,6 +3,8 @@ package db
 import (
 	"context"
 	"database/sql"
+	"strings"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -95,22 +97,42 @@ func DeleteTask(id string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	rows, err := res.RowsAffected()
 	if err != nil {
 		return err
 	}
-	
+
 	if rows == 0 {
 		return sql.ErrNoRows
 	}
-	
+
 	return nil
 }
 
-func GetTasks() ([]Task, error) {
-	query := `SELECT id, date, title, comment, repeat FROM scheduler ORDER BY date LIMIT 50`
-	rows, err := DB.Query(query)
+func GetTasks(limit int, search string) ([]Task, error) {
+	search = strings.TrimSpace(search)
+
+	var query string
+	var args []any
+
+	if search == "" {
+		query = `SELECT id, date, title, comment, repeat FROM scheduler ORDER BY date LIMIT ?`
+		args = append(args, limit)
+	} else {
+		parsedTime, err := time.Parse("02.01.2006", search)
+		if err == nil {
+			dbDate := parsedTime.Format("20060102")
+			query = `SELECT id, date, title, comment, repeat FROM scheduler WHERE date = ? ORDER BY date LIMIT ?`
+			args = append(args, dbDate, limit)
+		} else {
+			likeParam := "%" + search + "%"
+			query = `SELECT id, date, title, comment, repeat FROM scheduler WHERE title LIKE ? OR comment LIKE ? ORDER BY date LIMIT ?`
+			args = append(args, likeParam, likeParam, limit)
+		}
+	}
+
+	rows, err := DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}

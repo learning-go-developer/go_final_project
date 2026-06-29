@@ -71,9 +71,11 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTasksHandler(w http.ResponseWriter, r *http.Request) {
-	tasks, err := db.GetTasks()
+	search := r.FormValue("search")
+
+	tasks, err := db.GetTasks(50, search)
 	if err != nil {
-		sendJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		sendJSON(w, http.StatusInternalServerError, map[string]string{"error": "ошибка получения задач из БД: " + err.Error()})
 		return
 	}
 
