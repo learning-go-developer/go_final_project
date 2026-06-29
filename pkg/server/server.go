@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"go_final_project/pkg/api"
 )
 
 func Run() {
@@ -12,12 +14,13 @@ func Run() {
 		port = "7540"
 	}
 
+	api.Init()
+
 	http.Handle("/", http.FileServer(http.Dir("web")))
 
 	log.Printf("server started on :%s", port)
 
-	err := http.ListenAndServe(":"+port, nil)
-	if err != nil {
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal(err)
 	}
 }
