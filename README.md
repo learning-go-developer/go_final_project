@@ -1,3 +1,9 @@
+# Файлы для итогового задания
+
+В директории `tests` находятся тесты для проверки API, которое должно быть реализовано в веб-сервере.
+
+Директория `web` содержит файлы фронтенда.
+
 # Todo Scheduler
 
 Веб-сервер для планирования задач с поддержкой аутентификации и работы с SQLite базой данных.
@@ -31,18 +37,16 @@ docker build -t todo-scheduler:latest .
 
 ```
 
-
 2. **Запуск контейнера:**
 ```bash
 docker run -d \
   -p 7540:7540 \
-  -e TODO_PASSWORD="password" \
+  -e TODO_PASSWORD="YOUR_PASSWORD" \
   -v $(pwd)/scheduler.db:/app/scheduler.db \
   --name todo_app \
   todo-scheduler:latest
 
 ```
-
 
 *Примечание: флаг `-v` монтирует базу данных с хоста в контейнер для сохранения данных.*
 
@@ -60,7 +64,7 @@ go test ./tests/... -v
 ```bash
 curl -X POST http://localhost:7540/api/signin \
   -H "Content-Type: application/json" \
-  -d '{"password": "твой_пароль"}'
+  -d '{"password": "YOUR_PASSWORD"}'
 ```
 
 Полученный JSON-ответ (поле token) необходимо скопировать и вставить в переменную Token в файле tests/settings.go.
