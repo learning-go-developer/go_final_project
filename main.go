@@ -8,14 +8,18 @@ import (
 	"go_final_project/pkg/server"
 )
 
-func main() {
-	dbFile := os.Getenv("TODO_DBFILE")
-	if dbFile == "" {
-		dbFile = "scheduler.db"
+func getEnvOr(key, fallback string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
 	}
+	return fallback
+}
 
-	if err := db.Init(dbFile); err != nil {
-		log.Fatal(err)
+func main() {
+	databasePath := getEnvOr("TODO_DBFILE", "scheduler.db")
+
+	if err := db.Init(databasePath); err != nil {
+		log.Fatalf("database initialization failed: %v", err)
 	}
 
 	server.Run()

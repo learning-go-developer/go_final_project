@@ -14,13 +14,15 @@ func Run() {
 		port = "7540"
 	}
 
-	api.Init()
+	mux := http.NewServeMux()
 
-	http.Handle("/", http.FileServer(http.Dir("web")))
+	mux.Handle("/", http.FileServer(http.Dir("web")))
 
-	log.Printf("server started on :%s", port)
+	api.RegisterRoutes(mux)
 
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatal(err)
+	log.Printf("Server is swimming on port :%s", port)
+
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
+		log.Fatalf("server stopped with error: %v", err)
 	}
 }

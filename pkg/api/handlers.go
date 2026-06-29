@@ -1,0 +1,115 @@
+package api
+
+import (
+	"encoding/json"
+	"net/http"
+	"strings"
+	"time"
+
+	"go_final_project/pkg/db"
+)
+
+func getTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.FormValue("id")
+	if id == "" {
+		sendJSON(w, http.StatusBadRequest, map[string]string{"error": "Не указан id"})
+		return
+	}
+
+	task, err := db.GetTask(id)
+	if err != nil || task == nil || task.ID == "" || task.ID == "0" {
+		sendJSON(w, http.StatusNotFound, map[string]string{"error": "Задача не найдена"})
+		return
+	}
+
+	sendJSON(w, http.StatusOK, task)
+}
+
+func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
+	var task db.Task
+	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
+		sendJSON(w, http.StatusBadRequest, map[string]string{"error": "ошибка десериализации JSON"})
+		return
+	}
+
+	if task.ID == "" {
+		sendJSON(w, http.StatusBadRequest, map[string]string{"error": "Не указан id задачи"})
+		return
+	}
+
+	if strings.TrimSpace(task.Title) == "" {
+		sendJSON(w, http.StatusBadRequest, map[string]string{"error": "Не указан заголовок задачи"})
+		return
+	}
+
+	if err := normalizeTaskDate(&task); err != nil {
+		sendJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+
+	if err := db.UpdateTask(&task); err != nil {
+		sendJSON(w, http.StatusNotFound, map[string]string{"error": "Задача не найдена или не обновлена"})
+		return
+	}
+
+	sendJSON(w, http.StatusOK, map[string]string{})
+}
+
+func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.FormValue("id")
+	if id == "" {
+		sendJSON(w, http.StatusBadRequest, map[string]string{"error": "Не указан id"})
+		return
+	}
+
+	if err := db.DeleteTask(id); err != nil {
+		sendJSON(w, http.StatusNotFound, map[string]string{"error": "Задача не найдена или не может быть удалена"})
+		return
+	}
+
+	sendJSON(w, http.StatusOK, map[string]string{})
+}
+
+func getTasksHandler(w http.ResponseWriter, r *http.Request) {
+	tasks, err := db.GetTasks()
+	if err != nil {
+		sendJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+
+	sendJSON(w, http.StatusOK, map[string][]db.Task{"tasks": tasks})
+}
+
+func finishTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.FormValue("id")
+	if id == "" {
+		sendJSON(w, http.StatusBadRequest, map[string]string{"error": "Не указан id"})
+		return
+	}
+
+	task, err := db.GetTask(id)
+	if err != nil {
+		sendJSON(w, http.StatusNotFound, map[string]string{"error": "Задача не найдена"})
+		return
+	}
+
+	if strings.TrimSpace(task.Repeat) == "" {
+		if err := db.DeleteTask(id); err != nil {
+			sendJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+	} else {
+		nextDate, err := NextDate(time.Now(), task.Date, task.Repeat)
+		if err != nil {
+			sendJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		task.Date = nextDate
+		if err := db.UpdateTask(task); err != nil {
+			sendJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+	}
+
+	sendJSON(w, http.StatusOK, map[string]string{})
+}
