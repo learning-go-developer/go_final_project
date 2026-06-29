@@ -29,11 +29,8 @@ func NextDate(now time.Time, start string, repeat string) (string, error) {
 
 	switch args[0] {
 	case "y":
-		for {
+		for !current.After(refTime) {
 			current = current.AddDate(1, 0, 0)
-			if current.After(refTime) {
-				break
-			}
 		}
 
 	case "d":
@@ -44,8 +41,6 @@ func NextDate(now time.Time, start string, repeat string) (string, error) {
 		if err != nil || days < 1 || days > 400 {
 			return "", errors.New("incorrect days interval")
 		}
-
-		current = current.AddDate(0, 0, days)
 
 		for !current.After(refTime) {
 			current = current.AddDate(0, 0, days)
