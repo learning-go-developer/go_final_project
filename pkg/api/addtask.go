@@ -18,7 +18,7 @@ func sendJSON(w http.ResponseWriter, status int, data any) {
 }
 
 func normalizeTaskDate(t *db.Task) error {
-	now := time.Now()
+	now := time.Now().UTC()
 	todayStr := now.Format(dateLayout)
 
 	if strings.TrimSpace(t.Date) == "" {
