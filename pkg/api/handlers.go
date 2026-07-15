@@ -1,7 +1,10 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -18,7 +21,18 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		sendJSON(w, http.StatusNotFound, map[string]string{"error": "Задача не найдена"})
+		if errors.Is(err, sql.ErrNoRows) {
+			sendJSON(w, http.StatusNotFound, map[string]string{
+				"error": "task not found",
+			})
+			return
+		}
+
+		log.Printf("failed to get task %q: %v", id, err)
+
+		sendJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "internal server error",
+		})
 		return
 	}
 
