@@ -17,7 +17,7 @@ func NextDate(now time.Time, start string, repeat string) (string, error) {
 
 	startDate, err := time.Parse(dateLayout, start)
 	if err != nil {
-		return "", err
+		return "", errors.New("invalid start date")
 	}
 
 	current := time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, time.UTC)

@@ -60,25 +60,39 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		sendJSON(w, http.StatusBadRequest, map[string]string{"error": "ошибка десериализации JSON: " + err.Error()})
+		log.Printf("failed to decode request body: %v", err)
+
+		sendJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "invalid JSON",
+		})
 		return
 	}
 
 	if strings.TrimSpace(task.Title) == "" {
-		sendJSON(w, http.StatusBadRequest, map[string]string{"error": "Не указан заголовок задачи"})
+		sendJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "Task title not specified",
+		})
 		return
 	}
 
 	if err := normalizeTaskDate(&task); err != nil {
-		sendJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		sendJSON(w, http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
 		return
 	}
 
 	id, err := db.AddTask(&task)
 	if err != nil {
-		sendJSON(w, http.StatusInternalServerError, map[string]string{"error": "ошибка сохранения в БД: " + err.Error()})
+		log.Printf("failed to add task: %v", err)
+
+		sendJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "internal server error",
+		})
 		return
 	}
 
-	sendJSON(w, http.StatusOK, map[string]string{"id": strconv.FormatInt(id, 10)})
+	sendJSON(w, http.StatusOK, map[string]string{
+		"id": strconv.FormatInt(id, 10),
+	})
 }
